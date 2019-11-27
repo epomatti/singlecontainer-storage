@@ -1,4 +1,4 @@
-# Single container + mounted storage
+# Single container with Mounted storage
 
 An application to test Azure WebApp with Single Container deployment mounting a Blob Storage container path.
 
@@ -33,62 +33,59 @@ Build and push the docker image:
 
 ```s
 docker build -t <your username>/node-web-app .
-docker run -p 8080:8080 -v <local-dir>:<dotenv-storage-path> -d evandropomatti/node-web-app
+docker run -p 8080:8080 -v <local-dir>:<dotenv-storage-path> -d <your username>/node-web-app
 ```
 
 You should be able test it again at this point.
 
 #### Azure
 
-Create the image registry:
+Once you tested your app locally, and against docker runtime, it is ready to run on Azure:
 
 ```s
+# set common resource parameters
+export group=myResourceGroup
+export location=brazilsouth
+export acr=myContainerRegistry
+export image=yourname/node-web-app
+export tag=yourname.azurecr.io/node-web-app
+export storageAccount=myStoragAccount
+export storageContainer=myfiles
+export localFilePath=/tmp/myfiles/myfile.txt
+export blobName=myfile.txt
+export plan=myPlan
+export webapp=myApp
+export storageMountId=storageMountId
+export storageMountPath=/tmp/myfiles
+
+# create the image registry
 az login
-az group create -n <group> -l <location>
-az acr create -n <name> -g <group> --sku Basic --admin-enabled true
-az acr login -n <name>
+az group create -n $group -l $location
+az acr create -n $acr -g $group --sku Basic --admin-enabled true
+az acr login -n $acr
+
+# push the docker image
+docker tag $image $tag
+docker push $tag
+
+# create the storage
+az storage account create -n $storageAccount -g $group -l $location --kind StorageV2 --sku Standard_LRS
+export key=$(az storage account keys list -n pomattistorage --query "[?keyName == 'key1'].value" -o tsv)
+az storage container create -n $storageContainer --account-name $storageAccount --account-key $key
+
+# upload a file
+az storage blob upload -c $storageContainer -f $localFilePath -n $blobName --account-name $storageAccount --account-key $key
+
+# create the Web App
+az appservice plan create -n $plan -g $group -l $location --is-linux
+az webapp create -g $group -p $plan -n $webapp -i $tag
+az webapp config storage-account add -k $key -a $storageAccount -i $storageMountId --sn $storageContainer -t AzureBlob -m $storageMountPath -n $webapp --resource-group $group
 ```
 
-Push the docker image:
+After you finish working, clean your resources:
 
 ```s
-docker tag <localname>/node-web-app <name>.azurecr.io/node-web-app
-sudo docker push <name>.azurecr.io/node-web-app
-```
-
-Create the storage:
-
-```s
-az storage account create -n <name> -g <group> -l <location> --kind StorageV2 --sku Standard_LRS
-az storage account keys list -g <group> -n <name>
-az storage container create -n <name> --account-name <account-name> --account-key <key>
-```
-
-Upload a file:
-
-```s
-az storage blob upload -c <container> -f <local-file> -n <blob-name> --account-name <account-name> --account-key <account-key>
-```
-
-Create the Web App:
-
-```s
-az appservice plan create -n <plan-name> -g <group> -l <location> --sku F1
-az acr credential show -n <registry-name>
-az webapp create -n <app-name> -p <plan-name> -g <group> -location <location> -i <image-name> -s <registry-user> -w <registry-password>
-
-az webapp config storage-account add -a pomattistorage -k qvqDtX2FkVqb+s615s68g2kiHxdKSxezPPzvvbF+ilQLKno7yG5fJM/ldhiGmnV91K7K2N2GlJGl9VZT8Ld3dA== -i awsomefiles -sn /tmp/awsomefiles -t AzureBlob -m /
-
-
-```
-
-
-## Purge resources
-
-After you are done with your tests don't forget to clean up:
-
-```s
-az group delete -n <group>
+az group delete -n $group
 ```
 
 ## Reference
