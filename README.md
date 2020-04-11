@@ -13,14 +13,14 @@ Requirements:
 
 Create the `.env` file with the path to the local storage path:
 
-```s
+```sh
 touch .env
 echo STORAGE=<STORAGE PATH> >> .env
 ```
 
 Get dependencies and start Node:
 
-```s
+```sh
 npm i
 node server.js
 ```
@@ -31,7 +31,7 @@ To test it, go to `http://localhost:8080/<file_name>`. The program will print th
 
 Build and push the docker image:
 
-```s
+```sh
 docker build -t <your username>/node-web-app .
 docker run -p 8080:8080 -v <local-dir>:<dotenv-storage-path> -d <your username>/node-web-app
 ```
@@ -42,7 +42,7 @@ You should be able test it again at this point.
 
 Once you tested your app locally, and against docker runtime, it is ready to run on Azure:
 
-```s
+```sh
 # set common resource parameters
 export group=myResourceGroup
 export location=brazilsouth
@@ -84,7 +84,7 @@ az webapp config storage-account add -k $key -a $storageAccount -i $storageMount
 
 After you finish working, clean your resources:
 
-```s
+```sh
 az group delete -n $group
 ```
 
