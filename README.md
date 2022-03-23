@@ -44,19 +44,19 @@ Once you tested your app locally, and against docker runtime, it is ready to run
 
 ```sh
 # set common resource parameters
-export group=myResourceGroup
-export location=brazilsouth
-export acr=myContainerRegistry
-export image=yourname/node-web-app
-export tag=yourname.azurecr.io/node-web-app
-export storageAccount=myStoragAccount
-export storageContainer=myfiles
-export localFilePath=/tmp/myfiles/myfile.txt
-export blobName=myfile.txt
-export plan=myPlan
-export webapp=myApp
-export storageMountId=storageMountId
-export storageMountPath=/tmp/myfiles
+export group='myResourceGroup'
+export location='brazilsouth'
+export acr='myContainerRegistry'
+export image='yourname/node-web-app'
+export tag='yourname.azurecr.io/node-web-app'
+export storageAccount='myStoragAccount'
+export storageContainer='myfiles'
+export localFilePath='/tmp/myfiles/myfile.txt'
+export blobName='myfile.txt'
+export plan='myPlan'
+export webapp='myApp'
+export storageMountId='storageMountId'
+export storageMountPath='/tmp/myfiles'
 
 # create the image registry
 az login
@@ -70,7 +70,7 @@ docker push $tag
 
 # create the storage
 az storage account create -n $storageAccount -g $group -l $location --kind StorageV2 --sku Standard_LRS
-export key=$(az storage account keys list -n pomattistorage --query "[?keyName == 'key1'].value" -o tsv)
+export key=$(az storage account keys list -n $storageAccount --query "[?keyName == 'key1'].value" -o tsv)
 az storage container create -n $storageContainer --account-name $storageAccount --account-key $key
 
 # upload a file
